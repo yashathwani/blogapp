@@ -14,7 +14,7 @@ const fs = require('fs')
 app.use(express.json());
 app.use(cors({ credentials: true, origin: 'http://localhost:5173' }))
 app.use(cookieparser());
-mongoose.connect('mongodb+srv://yashathwani45:7gklM84FhAxKgi2t@cluster0.87leb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
+mongoose.connect('')
 
 
 app.post('/register', async (req, res) => {
