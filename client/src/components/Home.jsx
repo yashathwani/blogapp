@@ -1,5 +1,30 @@
+import { useState, useEffect, useContext } from 'react';
 import './Home.css'
+import { Link } from 'react-router-dom';
+import { UserContext } from '../components/UserContext';
 export default function Home() {
+    const { userInfo, setUserInfo }=useContext(UserContext);
+    useEffect(() => {
+        fetch('http://localhost:4000/profile', {
+            credentials: 'include'
+        }).then(response => {
+            response.json().then(userInfo => {
+                console.log(userInfo);
+                setUserInfo(userInfo);
+            });
+        });
+    }, [])
+    function logout() {
+        fetch('http://localhost:4000/logout', {
+            credentials: 'include',
+            method: 'POST'
+        }).then(response => {
+            if(response.ok) {
+                setUserInfo(null);
+            }
+        })
+    }
+    const username = userInfo?.username;
     return (
         <div className="Home">
             <nav className="navbar">
@@ -9,8 +34,18 @@ export default function Home() {
                     <a href="/explore">Explore</a>
                     <a href="/write">Write</a>
                     <a href="/about">About</a>
-                    <button className="btn btn-primary">Sign In</button>
-                    <button className="btn btn-secondary">Sign Up</button>
+                    {username && (
+                        <>
+                            <Link to='/create' className="btn btn-primary">Create  New Post</Link>
+                            <a onClick={logout}>Logout ({username})</a>
+                        </>    
+                    )}
+                    {!username && (
+                     <>
+                            <Link to="/login" className="btn btn-primary">Sign In</Link>
+                            <Link to="/register" className="btn btn-secondary">Sign Up</Link>
+                    </>
+                    )}
                 </div>
             </nav>
 

@@ -6,13 +6,16 @@ const mongoose=require('mongoose')
 const User=require('./models/User')
 const salt = bcrypt.genSaltSync(10);
 const jwt = require('jsonwebtoken')
-
+const cors = require('cors')
+const cookieparser=require('cookie-parser')
 
 const secret = 'fglksfdfngglkgsfdgfdgd'
 const fs = require('fs')
 app.use(express.json());
+app.use(cors({ credentials: true, origin: 'http://localhost:5173' }))
+app.use(cookieparser());
+mongoose.connect('mongodb+srv://yashathwani45:7gklM84FhAxKgi2t@cluster0.87leb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
 
-mongoose.connect('')
 
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
@@ -53,7 +56,28 @@ app.post('/login', async (req, res) => {
     }
 })
 
+app.post('/logout', (req, res) => {
+    res.cookie('token', '').json('ok')
+});
+app.get('/profile', (req, res) => {
+    const { token } = req.cookies;
 
+    // Check if the token is available in cookies
+    if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
+
+    // Verify the JWT token
+    jwt.verify(token, secret, {}, (err, info) => {
+        if (err) {
+            console.error('JWT verification failed:', err);
+            return res.status(403).json({ error: 'Token verification failed' });
+        }
+
+        // Send the verified user info if everything is fine
+        res.json(info);
+    });
+});
 
 
 
