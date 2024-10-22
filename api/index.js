@@ -7,10 +7,12 @@ const User=require('./models/User')
 const salt = bcrypt.genSaltSync(10);
 const jwt = require('jsonwebtoken')
 const cors = require('cors')
-const cookieparser=require('cookie-parser')
-
+const cookieparser = require('cookie-parser')
+const Post = require('./models/Post')
 const secret = 'fglksfdfngglkgsfdgfdgd'
 const fs = require('fs')
+const multer = require('multer')
+const uploadMiddleware=multer({dest:'uploads/'})
 app.use(express.json());
 app.use(cors({ credentials: true, origin: 'http://localhost:5173' }))
 app.use(cookieparser());
@@ -79,6 +81,42 @@ app.get('/profile', (req, res) => {
     });
 });
 
+app.post('/post', uploadMiddleware.single('cover'), async (req, res) => {
+    const { originalname, path } = req.file;
+    const parts = originalname.split('.');
+    const ext = parts[parts.length - 1];
+    const newPath = path + '.' + ext;
+    fs.renameSync(path, newPath);
+
+    const { token } = req.cookies;
+    if (!token) {
+        return res.status(401).json({ error: 'JWT token missing' });
+    }
+
+    jwt.verify(token, secret, {}, async (error, info) => {
+        if (error) {
+            return res.status(403).json({ error: 'Token verification failed' });
+        }
+
+        const { title, summary, content } = req.body;
+        const postDoc = await Post.create({
+            title,
+            summary,
+            content,
+            cover: newPath,
+            author: info.id
+        });
+
+        res.json(postDoc);
+    });
+});
+
+
+app.get('/post', async (req, res) => {
+    res.json(
+        await Post.find().populate('author',['username']).sort({ createdAt: -1 }).limit(20)
+    )
+})
 
 
 
